@@ -54,10 +54,41 @@ def search(term: str, count: int) -> List[SearchResult]:
                             "fuzziness": "AUTO"
                         }
                     }
+                },
+                {
+                    "range": {
+                        "price": {
+                            "gte": 10,
+                            "lte": 20,
+                            "boost": 2.0
+                        }
+                    }
                 }
             ]
         }
     }
-    docs = s.query(name_query)[:count].execute()
+
+    price_range = {
+        "bool": {
+            "must": [
+                {"match": {
+                    "description.english_analyzed": {
+                        "query": term,
+                        "operator": "and",
+                        "fuzziness": "AUTO"
+                    }
+                }}
+            ],
+            "filter": {
+                "range": {
+                    "price": {
+                        "gte": 10,
+                        "lte": 30
+                    }
+                }
+            }
+        }
+    }
+    docs = s.query(price_range)[:count].execute()
 
     return [SearchResult.from_doc(d) for d in docs]

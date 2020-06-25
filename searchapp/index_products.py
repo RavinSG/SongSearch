@@ -62,7 +62,7 @@ def products_to_index(es, products: [ProductData]):
             "_source": {
                 "name": product.name,
                 "image": product.image,
-                "price": product.price,
+                "price": float(product.price),
                 "description": product.description
             }
 
