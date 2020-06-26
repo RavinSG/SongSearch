@@ -37,13 +37,15 @@ def search_single_product():
     """
     query = request.args.get('search')
     artist_name = request.args.get('artist_name')
+    min_rating = request.args.get('min_rating')
     num_results = 50
-    products_by_category = [(query, search(query, num_results, artist_name))]
+    products_by_category = [(query, search(query, num_results, artist_name, min_rating))]
     return render_template(
         'index.html',
         products_by_category=products_by_category,
         search_term=query,
-        artist_name=artist_name
+        artist_name=artist_name,
+        min_rating=min_rating
     )
 
 

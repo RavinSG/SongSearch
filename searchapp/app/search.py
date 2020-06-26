@@ -24,22 +24,25 @@ class SearchResult:
         )
 
 
-def search(term: str, count: int, artist_name=None) -> List[SearchResult]:
+def search(term: str, count: int, artist_name=None, min_rating=0) -> List[SearchResult]:
     client = Elasticsearch()
     # Elasticsearch 6 requires the content-type header to be set, and this is
     # not included by default in the current version of elasticsearch-py
     client.transport.connection_pool.connection.headers.update(HEADERS)
 
     s = Search(using=client, index=INDEX_NAME, doc_type=DOC_TYPE)
-    # filters = []
-    filters = [{
-        "range": {
-            "track_rating": {
-                "gte": 0,
-                "lte": 10
+    filters = []
+
+    if min_rating != '' and float(min_rating) > 0:
+        rating_facet = {
+            "range": {
+                "track_rating": {
+                    "gte": float(min_rating)
+                }
             }
         }
-    }]
+
+        filters.append(rating_facet)
 
     if artist_name is not None and artist_name != '':
         artist_facet = {
