@@ -10,85 +10,64 @@ HEADERS = {'content-type': 'application/json'}
 class SearchResult:
     """Represents a product returned from elasticsearch."""
 
-    def __init__(self, id_, image, name):
+    def __init__(self, id_, track_name_si, track_name_en):
         self.id = id_
-        self.image = image
-        self.name = name
+        self.track_name_si = track_name_si
+        self.track_name_en = track_name_en
 
     def from_doc(doc) -> 'SearchResult':
+        print(doc)
         return SearchResult(
             id_=doc.meta.id,
-            image=doc.image,
-            name=doc.name,
+            track_name_en=doc.track_name_en,
+            track_name_si=doc.track_name_si,
         )
 
 
-def search(term: str, count: int) -> List[SearchResult]:
+def search(term: str, count: int, artist_name=None) -> List[SearchResult]:
     client = Elasticsearch()
-
     # Elasticsearch 6 requires the content-type header to be set, and this is
     # not included by default in the current version of elasticsearch-py
     client.transport.connection_pool.connection.headers.update(HEADERS)
 
     s = Search(using=client, index=INDEX_NAME, doc_type=DOC_TYPE)
-    name_query = {
-
-        "dis_max": {
-            "tie_breaker": 0.7,
-            "boost": 1.2,
-            "queries": [
-                {
-                    "match": {
-                        "description.english_analyzed": {
-                            "query": term,
-                            "operator": "and",
-                            "fuzziness": "AUTO"
-                        }
-                    }
-                },
-                {
-                    "match": {
-                        "name.english_analyzed": {
-                            "query": term,
-                            "operator": "and",
-                            "fuzziness": "AUTO"
-                        }
-                    }
-                },
-                {
-                    "range": {
-                        "price": {
-                            "gte": 10,
-                            "lte": 20,
-                            "boost": 2.0
-                        }
-                    }
-                }
-            ]
+    # filters = []
+    filters = [{
+        "range": {
+            "track_rating": {
+                "gte": 0,
+                "lte": 10
+            }
         }
-    }
+    }]
 
-    price_range = {
-        "bool": {
-            "must": [
-                {"match": {
-                    "description.english_analyzed": {
-                        "query": term,
-                        "operator": "and",
-                        "fuzziness": "AUTO"
-                    }
-                }}
-            ],
-            "filter": {
-                "range": {
-                    "price": {
-                        "gte": 10,
-                        "lte": 30
-                    }
+    if artist_name is not None and artist_name != '':
+        artist_facet = {
+            "match": {
+                "artist_name_si": {
+                    "query": artist_name,
+                    "fuzziness": "AUTO"
                 }
             }
         }
+
+        filters.append(artist_facet)
+
+    query = {
+        "bool": {
+            "must": [{
+                "match": {
+                    "track_name_si": {
+                        "query": term,
+                        "fuzziness": "AUTO"
+                    }
+                }
+            }],
+            "filter": filters
+        }
     }
-    docs = s.query(price_range)[:count].execute()
+
+    print(query)
+    docs = s.query(query)[:count].execute()
 
     return [SearchResult.from_doc(d) for d in docs]

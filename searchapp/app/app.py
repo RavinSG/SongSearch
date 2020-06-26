@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request
 
-from searchapp.data import all_products
+from searchapp.data import all_songs
 from searchapp.app.search import search
 
 app = Flask(__name__)
@@ -13,14 +13,11 @@ def index():
     Search for products across a variety of terms, and show 9 results for each.
     """
     search_terms = [
-        'necklace',
-        'metal necklace',
-        'necklce',
-        'OK',
-        'brass necklace',
-        'a brass necklace',
-        'necklaces made of brass',
-        "men's jacket",
+        'amma',
+        'mandaram',
+        'kuweni',
+        'adare',
+        'hadawatha'
     ]
 
     num_results = 9
@@ -39,12 +36,14 @@ def search_single_product():
     Return the top 50 results.
     """
     query = request.args.get('search')
+    artist_name = request.args.get('artist_name')
     num_results = 50
-    products_by_category = [(query, search(query, num_results))]
+    products_by_category = [(query, search(query, num_results, artist_name))]
     return render_template(
         'index.html',
         products_by_category=products_by_category,
         search_term=query,
+        artist_name=artist_name
     )
 
 
@@ -54,7 +53,7 @@ def single_product(product_id):
     Display information about a specific product
     """
 
-    product = str(all_products()[product_id - 1])
+    product = str(all_songs()[product_id - 1])
 
     return render_template(
         'product.html',

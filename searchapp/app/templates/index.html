@@ -70,6 +70,7 @@
 
   <form id="search-bar" action="/search">
     <input type="text" placeholder="Search.." name="search" value="{{ search_term }}">
+    <input type="text" placeholder="Name" name="artist_name" value="{{ artist_name }}">
     <button type="submit"><i class="fa fa-search">Search</i></button>
   </form>
 
@@ -81,10 +82,10 @@
         </div>
         <div class="search-results">
           {% for product in products %}
-            <a href="/product/{{ product.id }}" class="product">
-              <img class="product-image" src="{{ product.image }}"/>
+            <a href="product/{{ product.id }}" class="product">
               <div class="product-info">
-                <span>{{ product.name }}</span>
+                <span>{{ product.track_name_en }}</span>
+                <span>{{ product.track_name_si }}</span>
               </div>
             </a>
           {% endfor %}
