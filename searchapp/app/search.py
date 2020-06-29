@@ -92,11 +92,32 @@ def search_artist(artist_name):
     return artist_facet
 
 
-def search(term: str, count: int, artist_name=None, min_rating=0) -> List[SearchResult]:
+def clean_search(search_term):
+    stopwords = ["ගැන", "සින්දු"]
+    words = search_term.split(" ")
+    for word in words:
+        if word in stopwords:
+            words.remove(word)
+
+    return " ".join(words)
+
+
+def search(term: str, count: int, artist_name="", min_rating=0) -> List[SearchResult]:
     client = Elasticsearch()
     client.transport.connection_pool.connection.headers.update(HEADERS)
     context = False
     s = Search(using=client, index=INDEX_NAME, doc_type=DOC_TYPE)
+    print(("t", term, artist_name, min_rating))
+
+    if "*" in term:
+        print("Wild card used")
+        query = {
+            "wildcard": {
+                "track_name_si": term
+            }
+        }
+        docs = s.query(query)[:count].execute()
+        return [SearchResult.from_doc(d) for d in docs]
 
     if "ජනප්‍රියම" in term or "හොඳම" in term:
         print("Top result search executed")
@@ -109,12 +130,13 @@ def search(term: str, count: int, artist_name=None, min_rating=0) -> List[Search
     if "ගැන" in term or "පිළිබඳ" in term:
         context = True
 
+    term = clean_search(term)
     query = create_query(term, min_rating, artist_name, context=context)
     docs = s.query(query)[:count].execute()
 
-    # if len(docs) < 3 and artist_name == '':
-    #     query = create_query(term, min_rating, artist_name, fuzzy=True)
-    #     docs = s.query(query)[:count].execute()
+    if len(docs) < 3 and artist_name == '':
+        query = create_query(term, min_rating, artist_name, fuzzy=True)
+        docs = s.query(query)[:count].execute()
     #
     if len(docs) < 3 and artist_name != "" and term == "":
         print("Artist search executed")

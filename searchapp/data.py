@@ -7,8 +7,9 @@ _all_songs = None
 
 class SongData:
 
-    def __init__(self, id_, track_id, track_name_en, track_name_si, track_rating, album_name_en,
-                 album_name_si, artist_name_en, artist_name_si, artist_rating, lyrics, ranking):
+    def __init__(self, id_, track_id='', track_name_en='', track_name_si='', track_rating=0, album_name_en='',
+                 album_name_si='', artist_name_en='', artist_name_si='', artist_rating='', lyrics='', ranking=0,
+                 situation=''):
         self.id = id_
         self.track_id = track_id
         self.track_name_en = track_name_en
@@ -21,6 +22,7 @@ class SongData:
         self.artist_rating = artist_rating
         self.lyrics = lyrics
         self.ranking = ranking
+        self.situation = situation
 
     def __str__(self):
         return textwrap.dedent("""\
@@ -35,6 +37,7 @@ class SongData:
             Artist Rating: {}
             Lyrics (SI): {}
             Ranking: {}
+            Situation: {}
         """).format(self.id,
                     self.track_name_en,
                     self.track_name_si,
@@ -45,7 +48,8 @@ class SongData:
                     self.artist_name_si,
                     self.artist_rating,
                     self.lyrics,
-                    self.ranking)
+                    self.ranking,
+                    self.situation)
 
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -77,4 +81,11 @@ def all_songs():
                 song_data = SongData(id_, **song)
                 _all_songs.append(song_data)
 
+        manual_songs = os.path.join(dir_path, "manual_songs.json")
+        with open(manual_songs, encoding='utf-8') as song_file:
+            for song in json.load(song_file):
+                idx = idx + 1
+                id_ = idx
+                song_data = SongData(id_, **song)
+                _all_songs.append(song_data)
     return _all_songs
