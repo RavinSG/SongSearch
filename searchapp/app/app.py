@@ -1,9 +1,28 @@
+import os
 from flask import Flask, render_template, request
+from wtforms import SelectField, StringField
+from flask_wtf import FlaskForm
 
 from searchapp.data import all_songs
 from searchapp.app.search import search
 
 app = Flask(__name__)
+SECRET_KEY = os.urandom(32)
+app.config['SECRET_KEY'] = SECRET_KEY
+
+
+class Form(FlaskForm):
+    country = SelectField('country', choices=[])
+    state = StringField("Song name")
+    city = SelectField('city', choices=[])
+
+
+@app.route('/home', methods=['GET', 'POST'])
+def landing_page():
+    form = Form()
+    form.country.choices = ["asd", 'asdfaf', "qweq", "cqdas", 1, 23, 4, 534, 6342, 522, 364537, 57, 567456, 3, 234, 32,
+                            562, 6, 246, 253]
+    return render_template('frontPage.html', form=form)
 
 
 @app.route('/')
@@ -13,11 +32,11 @@ def index():
     Search for products across a variety of terms, and show 9 results for each.
     """
     search_terms = [
-        'amma',
-        'mandaram',
-        'kuweni',
-        'adare',
-        'hadawatha'
+        'අම්මා',
+        'තාත්තා',
+        'ආදරේ',
+        'දුක',
+        'පාසල'
     ]
 
     num_results = 9

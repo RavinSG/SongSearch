@@ -1,2 +1,2 @@
-DOC_TYPE = 'product'
-INDEX_NAME = 'products_index'
+DOC_TYPE = 'song'
+INDEX_NAME = 'songs_index'

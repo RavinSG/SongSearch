@@ -84,9 +84,9 @@
         <div class="search-results">
           {% for product in products %}
             <a href="product/{{ product.id }}" class="product">
-              <div class="product-info">
-                <span>{{ product.track_name_en }}</span>
-                <span>{{ product.track_name_si }}</span>
+              <div style="height: auto" class="product-info">
+                <span>{{ product.track_name_si }}</span><br>
+                <span style="height: auto">{{ product.artist_name_si }}</span>
               </div>
             </a>
           {% endfor %}
