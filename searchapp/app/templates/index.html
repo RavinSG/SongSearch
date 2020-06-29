@@ -44,24 +44,24 @@
       grid-gap: 20px;
     }
 
-    .product {
+    .song {
       display: block;
       color: #333;
       text-decoration: none;
     }
 
-    .product-image {
+    .song-image {
       max-width: 100px;
       max-height: 100px;
       margin-bottom: 10px;
     }
 
-    .product-info {
+    .song-info {
       height: 54px;
       overflow: hidden;
     }
 
-    .product-name {
+    .song-name {
       font-size: 10px;
       margin-right: 10px;
     }
@@ -76,17 +76,17 @@
   </form>
 
   <div class="bulk-results">
-    {% for category, products in products_by_category %}
+    {% for category, songs in products_by_category %}
       <div class="search">
         <div class="search-header">
           <a href="search?search={{category}}" class="search-term">"{{ category }}"</a>
         </div>
         <div class="search-results">
-          {% for product in products %}
-            <a href="product/{{ product.id }}" class="product">
-              <div style="height: auto" class="product-info">
-                <span>{{ product.track_name_si }}</span><br>
-                <span style="height: auto">{{ product.artist_name_si }}</span>
+          {% for song in songs %}
+            <a href="song/{{ song.id }}" class="song">
+              <div style="height: auto" class="song-info">
+                <span>{{ song.track_name_si }}</span><br>
+                <span style="height: auto">{{ song.artist_name_si }}</span>
               </div>
             </a>
           {% endfor %}

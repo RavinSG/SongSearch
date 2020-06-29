@@ -57,6 +57,10 @@ def search_single_product():
     query = request.args.get('search')
     artist_name = request.args.get('artist_name')
     min_rating = request.args.get('min_rating')
+    if artist_name is None:
+        artist_name = ""
+    if min_rating is None:
+        min_rating = 0
     num_results = 50
     products_by_category = [(query, search(query, num_results, artist_name, min_rating))]
     return render_template(
@@ -68,13 +72,13 @@ def search_single_product():
     )
 
 
-@app.route('/product/<int:product_id>')
-def single_product(product_id):
+@app.route('/song/<int:song_id>')
+def single_product(song_id):
     """
     Display information about a specific product
     """
 
-    product = str(all_songs()[product_id - 1])
+    product = str(all_songs()[song_id - 1])
 
     return render_template(
         'product.html',

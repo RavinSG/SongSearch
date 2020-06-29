@@ -24,13 +24,18 @@ class SearchResult:
         )
 
 
-def create_query(search_term, min_rating, artist_name, fuzzy=False):
+def create_query(search_term, min_rating, artist_name, fuzzy=False, context=False):
     filters = []
     fuzziness = 0
+    fields = ["track_name_si^3"]
+
+    if context:
+        fields.append("lyrics")
+
     if fuzzy:
         fuzziness = "AUTO"
 
-    if min_rating != '' and float(min_rating) > 0:
+    if min_rating is not None and min_rating != '' and float(min_rating) > 0:
         rating_facet = {
             "range": {
                 "track_rating": {
@@ -41,15 +46,8 @@ def create_query(search_term, min_rating, artist_name, fuzzy=False):
 
         filters.append(rating_facet)
 
-    if artist_name is not None and artist_name != '':
-        artist_facet = {
-            "match": {
-                "artist_name_si": {
-                    "query": artist_name,
-                    "fuzziness": fuzziness
-                }
-            }
-        }
+    if artist_name != "":
+        filters.append(search_artist(artist_name))
 
     query = {
         "bool": {
@@ -57,7 +55,7 @@ def create_query(search_term, min_rating, artist_name, fuzzy=False):
                 "multi_match": {
 
                     "query": search_term,
-                    "fields": ["track_name_si^2", "lyrics"],
+                    "fields": fields,
                     "fuzziness": fuzziness
                 }
             }],
@@ -68,20 +66,60 @@ def create_query(search_term, min_rating, artist_name, fuzzy=False):
     return query
 
 
+def search_top_songs():
+    query = {
+        "range": {
+            "ranking": {
+                "gte": 0
+            }
+        }
+    }
+
+    return query
+
+
+def search_artist(artist_name):
+    print("Artist filter added")
+    artist_facet = {
+        "match": {
+            "artist_name_si": {
+                "query": artist_name,
+                "fuzziness": 0,
+            }
+        }
+    }
+
+    return artist_facet
+
+
 def search(term: str, count: int, artist_name=None, min_rating=0) -> List[SearchResult]:
     client = Elasticsearch()
-    # Elasticsearch 6 requires the content-type header to be set, and this is
-    # not included by default in the current version of elasticsearch-py
     client.transport.connection_pool.connection.headers.update(HEADERS)
-
+    context = False
     s = Search(using=client, index=INDEX_NAME, doc_type=DOC_TYPE)
 
-    query = create_query(term, min_rating, artist_name)
+    if "ජනප්‍රියම" in term or "හොඳම" in term:
+        print("Top result search executed")
+        top_k = [int(s) for s in term.split() if s.isdigit()][0]
+        query = search_top_songs()
+        docs = s.query(query).sort("ranking")[:top_k].execute()
 
-    print(query)
+        return [SearchResult.from_doc(d) for d in docs]
+
+    if "ගැන" in term or "පිළිබඳ" in term:
+        context = True
+
+    query = create_query(term, min_rating, artist_name, context=context)
     docs = s.query(query)[:count].execute()
-    if len(docs) < 3:
-        query = create_query(term, min_rating, artist_name, fuzzy=True)
+
+    # if len(docs) < 3 and artist_name == '':
+    #     query = create_query(term, min_rating, artist_name, fuzzy=True)
+    #     docs = s.query(query)[:count].execute()
+    #
+    if len(docs) < 3 and artist_name != "" and term == "":
+        print("Artist search executed")
+        query = search_artist(artist_name)
         docs = s.query(query)[:count].execute()
 
+    print("Final query: ", query)
     return [SearchResult.from_doc(d) for d in docs]
