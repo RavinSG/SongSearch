@@ -102,6 +102,16 @@ def clean_search(search_term):
     return " ".join(words)
 
 
+def situational_query(situation):
+    query = {
+        "match": {
+            "situation": situation
+        }
+    }
+
+    return query
+
+
 def search(term: str, count: int, artist_name="", min_rating=0) -> List[SearchResult]:
     client = Elasticsearch()
     client.transport.connection_pool.connection.headers.update(HEADERS)
@@ -125,6 +135,17 @@ def search(term: str, count: int, artist_name="", min_rating=0) -> List[SearchRe
         query = search_top_songs()
         docs = s.query(query).sort("ranking")[:top_k].execute()
 
+        return [SearchResult.from_doc(d) for d in docs]
+
+    if "අහන සින්දු" in term or "කියන සින්දු" in term:
+        if "දුක" in term:
+            query = situational_query("sad")
+        elif "යාලුවො" in term:
+            query = situational_query("friends")
+        else:
+            query = situational_query("")
+
+        docs = s.query(query)[:count].execute()
         return [SearchResult.from_doc(d) for d in docs]
 
     if "ගැන" in term or "පිළිබඳ" in term:
